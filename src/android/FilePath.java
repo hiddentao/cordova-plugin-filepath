@@ -18,11 +18,9 @@ import org.apache.cordova.CordovaWebView;
 import org.json.JSONArray;
 
 
-// Based on: https://github.com/iPaulPro/aFileChooser/blob/master/aFileChooser/src/com/ipaulpro/afilechooser/utils/FileUtils.java
+public class FilePath extends CordovaPlugin {
 
-public class FileUtils extends CordovaPlugin {
-
-    private static final String TAG = "[FileUtils plugin]: ";
+    private static final String TAG = "[FilePath plugin]: ";
 
 
     public void initialize(CordovaInterface cordova, final CordovaWebView webView) {
