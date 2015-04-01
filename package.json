@@ -16,7 +16,7 @@
     "cordova",
     "file",
     "ecosystem:cordova",
-    "cordova-android",
+    "cordova-android"
   ],
   "author": "Ramesh Nair <ram@hiddentao.com>",
   "license": "Apache 2.0"
