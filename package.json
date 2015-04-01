@@ -5,7 +5,7 @@
   "cordova": {
     "id": "com.hiddentao.cordova.filepath",
     "platforms": [
-      "android",
+      "android"
     ]
   },
   "repository": {
