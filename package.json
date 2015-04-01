@@ -1,0 +1,23 @@
+{
+  "name": "cordova-plugin-filepath",
+  "version": "1.0.0",
+  "description": "Resolve native file paths from content URLs for Cordova platforms",
+  "cordova": {
+    "id": "com.hiddentao.cordova.filepath",
+    "platforms": [
+      "android",
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hiddentao/cordova-plugin-filepath.git"
+  },
+  "keywords": [
+    "cordova",
+    "file",
+    "ecosystem:cordova",
+    "cordova-android",
+  ],
+  "author": "Ramesh Nair <ram@hiddentao.com>",
+  "license": "Apache 2.0"
+}
