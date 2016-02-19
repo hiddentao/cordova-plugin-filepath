@@ -18,8 +18,8 @@
 
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
 xmlns:android="http://schemas.android.com/apk/res/android"
-           id="com.hiddentao.cordova.filepath"
-      version="1.0.1">
+           id="cordova-plugin-filepath"
+      version="1.0.2">
     <name>FilePath</name>
     <description>Cordova filepath plugin</description>
     <license>Apache 2.0</license>
@@ -45,6 +45,7 @@ xmlns:android="http://schemas.android.com/apk/res/android"
         </config-file>
 
         <config-file target="AndroidManifest.xml" parent="/*">
+            <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
             <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
         </config-file>
 
