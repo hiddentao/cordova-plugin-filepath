@@ -19,7 +19,7 @@
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
 xmlns:android="http://schemas.android.com/apk/res/android"
            id="com.hiddentao.cordova.filepath"
-      version="1.0.0">
+      version="1.0.1">
     <name>FilePath</name>
     <description>Cordova filepath plugin</description>
     <license>Apache 2.0</license>
@@ -31,12 +31,12 @@ xmlns:android="http://schemas.android.com/apk/res/android"
         <engine name="cordova-android" version=">=3.1.0" /><!-- Uses CordovaResourceApi -->
     </engines>
 
-    <js-module src="www/FilePath.js" name="FilePath">
-        <clobbers target="window.FilePath" />
-    </js-module>
-
     <!-- android -->
     <platform name="android">
+        <js-module src="www/FilePath.js" name="FilePath">
+            <clobbers target="window.FilePath" />
+        </js-module>
+
         <config-file target="res/xml/config.xml" parent="/*">
             <feature name="FilePath" >
                 <param name="android-package" value="com.hiddentao.cordova.filepath.FilePath"/>
