@@ -16,11 +16,23 @@ import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CordovaWebView;
 import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONException;
 
+import java.util.List;
+import java.io.File;
 
 public class FilePath extends CordovaPlugin {
 
     private static final String TAG = "[FilePath plugin]: ";
+
+    private static final int INVALID_ACTION_ERROR_CODE = -1;
+
+    private static final int GET_PATH_ERROR_CODE = 0;
+    private static final String GET_PATH_ERROR_ID = null;
+
+    private static final int GET_CLOUD_PATH_ERROR_CODE = 1;
+    private static final String GET_CLOUD_PATH_ERROR_ID = "cloud";
 
 
     public void initialize(CordovaInterface cordova, final CordovaWebView webView) {
@@ -36,37 +48,49 @@ public class FilePath extends CordovaPlugin {
      * @return              A PluginResult object with a status and message.
      */
     @Override
-    public boolean execute(String action, JSONArray args, CallbackContext callbackContext) {
-        try {
-            if (action.equals("resolveNativePath")) {
-              /* content:///... */
-                String uriStr = args.getString(0);
-                Uri pvUrl = Uri.parse(uriStr);
+    public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
+        JSONObject resultObj = new JSONObject();
 
-                Log.d(TAG, "URI: " + uriStr);
+        if (action.equals("resolveNativePath")) {
+             /* content:///... */
+            String uriStr = args.getString(0);
+            Uri pvUrl = Uri.parse(uriStr);
 
-                Context appContext = this.cordova.getActivity().getApplicationContext();
-                String filePath = getPath(appContext, pvUrl);
+            Log.d(TAG, "URI: " + uriStr);
 
-                if (null == filePath) {
-                    throw new Exception("Unable to resolve filesystem path for " + uriStr);
-                }
+            Context appContext = this.cordova.getActivity().getApplicationContext();
+            String filePath = getPath(appContext, pvUrl);
 
+            //check result; send error/success callback
+            if (filePath == GET_PATH_ERROR_ID) {
+                resultObj.put("code", GET_PATH_ERROR_CODE);
+                resultObj.put("message", "Unable to resolve filesystem path.");
+
+                callbackContext.error(resultObj);
+            }
+            else if (filePath.equals(GET_CLOUD_PATH_ERROR_ID)) {
+                resultObj.put("code", GET_CLOUD_PATH_ERROR_CODE);
+                resultObj.put("message", "Files from cloud cannot be resolved to filesystem, download is required.");
+                
+                callbackContext.error(resultObj);
+            }
+            else {
                 Log.d(TAG, "Filepath: " + filePath);
 
-                callbackContext.success(filePath);
-
-                return true;
-            } else {
-                throw new Exception("Invalid action");
+                callbackContext.success("file://" + filePath);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            callbackContext.error(e.toString());
-            return false;
-        }
-    }
 
+            return true;
+        }
+        else {
+            resultObj.put("code", INVALID_ACTION_ERROR_CODE);
+            resultObj.put("message", "Invalid action.");
+            
+            callbackContext.error(resultObj);
+        }
+
+        return false;
+    }
 
 
     /**
@@ -98,7 +122,16 @@ public class FilePath extends CordovaPlugin {
      * @return Whether the Uri authority is Google Photos.
      */
     private static boolean isGooglePhotosUri(Uri uri) {
-        return "com.google.android.apps.photos.content".equals(uri.getAuthority());
+        return ("com.google.android.apps.photos.content".equals(uri.getAuthority())
+                || "com.google.android.apps.photos.contentprovider".equals(uri.getAuthority()));
+    }
+
+    /**
+     * @param uri The Uri to check.
+     * @return Whether the Uri authority is Google Drive.
+     */
+    private static boolean isGoogleDriveUri(Uri uri) {
+        return "com.google.android.apps.docs.storage".equals(uri.getAuthority());
     }
 
     /**
@@ -135,6 +168,77 @@ public class FilePath extends CordovaPlugin {
     }
 
     /**
+     * Get content:// from segment list
+     * In the new Uri Authority of Google Photos, the last segment is not the content:// anymore
+     * So let's iterate through all segments and find the content uri!
+     *
+     * @param segments The list of segment
+     */
+    private static String getContentFromSegments(List<String> segments) {
+        String contentPath = "";
+
+        for(String item : segments) {
+            if (item.startsWith("content://")) {
+                contentPath = item;
+                break;
+            }
+        }
+
+        return contentPath;
+    }
+
+    /**
+     * Check if a file exists on device
+     *
+     * @param filePath The absolute file path
+     */
+    private static boolean fileExists(String filePath) {
+        File file = new File(filePath);
+
+        return file.exists();
+    }
+
+    /**
+     * Get full file path from external storage
+     *
+     * @param pathData The storage type and the relative path
+     */
+    private static String getPathFromExtSD(String[] pathData) {
+        final String type = pathData[0];
+        final String relativePath = "/" + pathData[1];
+        String fullPath = "";
+
+        // on my Sony devices (4.4.4 & 5.1.1), `type` is a dynamic string
+        // something like "71F8-2C0A", some kind of unique id per storage
+        // don't know any API that can get the root path of that storage based on its id.
+        //
+        // so no "primary" type, but let the check here for other devices
+        if ("primary".equalsIgnoreCase(type)) {
+            fullPath = Environment.getExternalStorageDirectory() + relativePath;
+            if (fileExists(fullPath)) {
+                return fullPath;
+            }
+        }
+    
+        // Environment.isExternalStorageRemovable() is `true` for external and internal storage
+        // so we cannot relay on it.
+        //
+        // instead, for each possible path, check if file exists
+        // we'll start with secondary storage as this could be our (physically) removable sd card
+        fullPath = System.getenv("SECONDARY_STORAGE") + relativePath;
+        if (fileExists(fullPath)) {
+            return fullPath;
+        }
+
+        fullPath = System.getenv("EXTERNAL_STORAGE") + relativePath;
+        if (fileExists(fullPath)) {
+            return fullPath;
+        }
+
+        return fullPath;
+    }
+
+    /**
      * Get a file path from a Uri. This will get the the path for Storage Access
      * Framework Documents, as well as the _data field for the MediaStore and
      * other file-based ContentProviders.<br>
@@ -167,8 +271,12 @@ public class FilePath extends CordovaPlugin {
                 final String[] split = docId.split(":");
                 final String type = split[0];
 
-                if ("primary".equalsIgnoreCase(type)) {
-                    return Environment.getExternalStorageDirectory() + "/" + split[1];
+                String fullPath = getPathFromExtSD(split);
+                if (fullPath != "") {
+                    return fullPath;
+                }
+                else {
+                    return null;
                 }
             }
             // DownloadsProvider
@@ -202,13 +310,23 @@ public class FilePath extends CordovaPlugin {
 
                 return getDataColumn(context, contentUri, selection, selectionArgs);
             }
+            else if (isGoogleDriveUri(uri)) {
+                return "cloud";
+            }
         }
         // MediaStore (and general)
         else if ("content".equalsIgnoreCase(uri.getScheme())) {
 
             // Return the remote address
-            if (isGooglePhotosUri(uri))
-                return uri.getLastPathSegment();
+            if (isGooglePhotosUri(uri)) {
+                String contentPath = getContentFromSegments(uri.getPathSegments());
+                if (contentPath != "") {
+                    return getPath(context, Uri.parse(contentPath));
+                }
+                else {
+                    return null;
+                }
+            }
 
             return getDataColumn(context, uri, null, null);
         }
