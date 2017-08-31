@@ -1,8 +1,10 @@
 package com.hiddentao.cordova.filepath;
 
 
+import android.Manifest;
 import android.content.ContentUris;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.util.Log;
 import android.database.Cursor;
@@ -10,6 +12,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaInterface;
@@ -34,9 +37,15 @@ public class FilePath extends CordovaPlugin {
     private static final int GET_CLOUD_PATH_ERROR_CODE = 1;
     private static final String GET_CLOUD_PATH_ERROR_ID = "cloud";
 
+    private static final int RC_READ_EXTERNAL_STORAGE = 5;
 
     public void initialize(CordovaInterface cordova, final CordovaWebView webView) {
         super.initialize(cordova, webView);
+
+        // Check whether we have the read storage permission.
+        if (ActivityCompat.checkSelfPermission(this.cordova.getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this.cordova.getActivity(), new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, RC_READ_EXTERNAL_STORAGE);
+        }
     }
 
     /**
