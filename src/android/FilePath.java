@@ -88,7 +88,7 @@ public class FilePath extends CordovaPlugin {
         } else if (action.equals("checkPermissions")) {
 
             if (ActivityCompat.checkSelfPermission(this.cordova.getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-                callbackContext.success('true');
+                callbackContext.success("true");
             }
 
             else {
