@@ -88,13 +88,14 @@ public class FilePath extends CordovaPlugin {
         } else if (action.equals("checkPermissions")) {
 
             if (ActivityCompat.checkSelfPermission(this.cordova.getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-                callbackContext.success(true);
+                callbackContext.success('true');
             }
 
             else {
                 ActivityCompat.requestPermissions(this.cordova.getActivity(), new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, RC_READ_EXTERNAL_STORAGE);
             }
 
+            return true;
         }
         else {
             resultObj.put("code", INVALID_ACTION_ERROR_CODE);
