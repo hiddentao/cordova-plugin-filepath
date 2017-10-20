@@ -1,6 +1,7 @@
 package com.hiddentao.cordova.filepath;
 
 
+
 import android.Manifest;
 import android.content.ContentUris;
 import android.content.Context;
@@ -26,6 +27,8 @@ import java.util.List;
 import java.io.File;
 
 public class FilePath extends CordovaPlugin {
+
+    public static CallbackContext mCallbackContext;
 
     private static final String TAG = "[FilePath plugin]: ";
 
@@ -53,6 +56,8 @@ public class FilePath extends CordovaPlugin {
      */
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
+        mCallbackContext = callbackContext;
+
         JSONObject resultObj = new JSONObject();
 
         if (action.equals("resolveNativePath")) {
@@ -87,12 +92,11 @@ public class FilePath extends CordovaPlugin {
             return true;
         } else if (action.equals("checkPermissions")) {
 
-            if (ActivityCompat.checkSelfPermission(this.cordova.getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            if (!cordova.hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                cordova.requestPermission(this, RC_READ_EXTERNAL_STORAGE,
+                        Manifest.permission.READ_EXTERNAL_STORAGE);
+            } else {
                 callbackContext.success("true");
-            }
-
-            else {
-                ActivityCompat.requestPermissions(this.cordova.getActivity(), new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, RC_READ_EXTERNAL_STORAGE);
             }
 
             return true;
@@ -352,4 +356,27 @@ public class FilePath extends CordovaPlugin {
 
         return null;
     }
+
+    @Override
+    public void onRequestPermissionResult(int requestCode, String[] permissions,
+                                          int[] grantResults) throws JSONException {
+        super.onRequestPermissionResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case RC_READ_EXTERNAL_STORAGE: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    mCallbackContext.success("true");
+
+                } else {
+
+                    Log.e(TAG, "Permission denied.");
+                    mCallbackContext.error("Permission denied.");
+                }
+                return;
+            }
+        }
+    }
+
 }
