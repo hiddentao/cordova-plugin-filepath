@@ -41,11 +41,6 @@ public class FilePath extends CordovaPlugin {
 
     public void initialize(CordovaInterface cordova, final CordovaWebView webView) {
         super.initialize(cordova, webView);
-
-        // Check whether we have the read storage permission.
-        if (ActivityCompat.checkSelfPermission(this.cordova.getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this.cordova.getActivity(), new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, RC_READ_EXTERNAL_STORAGE);
-        }
     }
 
     /**
@@ -80,7 +75,7 @@ public class FilePath extends CordovaPlugin {
             else if (filePath.equals(GET_CLOUD_PATH_ERROR_ID)) {
                 resultObj.put("code", GET_CLOUD_PATH_ERROR_CODE);
                 resultObj.put("message", "Files from cloud cannot be resolved to filesystem, download is required.");
-                
+
                 callbackContext.error(resultObj);
             }
             else {
@@ -90,11 +85,21 @@ public class FilePath extends CordovaPlugin {
             }
 
             return true;
+        } else if (action.equals("checkPermissions")) {
+
+            if (ActivityCompat.checkSelfPermission(this.cordova.getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                callbackContext.success(true);
+            }
+
+            else {
+                ActivityCompat.requestPermissions(this.cordova.getActivity(), new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, RC_READ_EXTERNAL_STORAGE);
+            }
+
         }
         else {
             resultObj.put("code", INVALID_ACTION_ERROR_CODE);
             resultObj.put("message", "Invalid action.");
-            
+
             callbackContext.error(resultObj);
         }
 
@@ -228,7 +233,7 @@ public class FilePath extends CordovaPlugin {
                 return fullPath;
             }
         }
-    
+
         // Environment.isExternalStorageRemovable() is `true` for external and internal storage
         // so we cannot relay on it.
         //
