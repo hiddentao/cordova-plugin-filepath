@@ -1,6 +1,7 @@
 package com.hiddentao.cordova.filepath;
 
 
+
 import android.Manifest;
 import android.content.ContentUris;
 import android.content.Context;
@@ -27,6 +28,8 @@ import java.io.File;
 
 public class FilePath extends CordovaPlugin {
 
+    public static CallbackContext mCallbackContext;
+
     private static final String TAG = "[FilePath plugin]: ";
 
     private static final int INVALID_ACTION_ERROR_CODE = -1;
@@ -41,11 +44,6 @@ public class FilePath extends CordovaPlugin {
 
     public void initialize(CordovaInterface cordova, final CordovaWebView webView) {
         super.initialize(cordova, webView);
-
-        // Check whether we have the read storage permission.
-        if (ActivityCompat.checkSelfPermission(this.cordova.getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this.cordova.getActivity(), new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, RC_READ_EXTERNAL_STORAGE);
-        }
     }
 
     /**
@@ -58,6 +56,8 @@ public class FilePath extends CordovaPlugin {
      */
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
+        mCallbackContext = callbackContext;
+
         JSONObject resultObj = new JSONObject();
 
         if (action.equals("resolveNativePath")) {
@@ -80,7 +80,7 @@ public class FilePath extends CordovaPlugin {
             else if (filePath.equals(GET_CLOUD_PATH_ERROR_ID)) {
                 resultObj.put("code", GET_CLOUD_PATH_ERROR_CODE);
                 resultObj.put("message", "Files from cloud cannot be resolved to filesystem, download is required.");
-                
+
                 callbackContext.error(resultObj);
             }
             else {
@@ -90,11 +90,21 @@ public class FilePath extends CordovaPlugin {
             }
 
             return true;
+        } else if (action.equals("checkPermissions")) {
+
+            if (!cordova.hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                cordova.requestPermission(this, RC_READ_EXTERNAL_STORAGE,
+                        Manifest.permission.READ_EXTERNAL_STORAGE);
+            } else {
+                callbackContext.success("true");
+            }
+
+            return true;
         }
         else {
             resultObj.put("code", INVALID_ACTION_ERROR_CODE);
             resultObj.put("message", "Invalid action.");
-            
+
             callbackContext.error(resultObj);
         }
 
@@ -228,7 +238,7 @@ public class FilePath extends CordovaPlugin {
                 return fullPath;
             }
         }
-    
+
         // Environment.isExternalStorageRemovable() is `true` for external and internal storage
         // so we cannot relay on it.
         //
@@ -346,4 +356,27 @@ public class FilePath extends CordovaPlugin {
 
         return null;
     }
+
+    @Override
+    public void onRequestPermissionResult(int requestCode, String[] permissions,
+                                          int[] grantResults) throws JSONException {
+        super.onRequestPermissionResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case RC_READ_EXTERNAL_STORAGE: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    mCallbackContext.success("true");
+
+                } else {
+
+                    Log.e(TAG, "Permission denied.");
+                    mCallbackContext.error("Permission denied.");
+                }
+                return;
+            }
+        }
+    }
+
 }

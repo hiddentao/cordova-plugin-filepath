@@ -10,5 +10,9 @@ module.exports = {
      */
     resolveNativePath: function(path, successCallback, errorCallback) {
         exec(successCallback, errorCallback, "FilePath", "resolveNativePath", [path]);
-    }
+    },
+
+    checkPermissions: function(successCallback, errorCallback) {
+      exec(successCallback, errorCallback, "FilePath", "checkPermissions", []);
+  }
 };
