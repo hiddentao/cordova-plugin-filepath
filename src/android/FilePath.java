@@ -144,6 +144,31 @@ public class FilePath extends CordovaPlugin {
     }
 
     /**
+     * @param uri The Uri to check.
+     * @return Whether the Uri authority is Gmail.
+     */
+    private static boolean isGmailUri(Uri uri) {
+        return "gmail-ls".equals(uri.getAuthority());
+    }
+
+    /**
+     * Obtain file name from uri
+     * @param resolver ${ContentResolver}
+     * @param uri The Uri to check.
+     * @return Document name
+     */
+    private static String getContentName(ContentResolver resolver, Uri uri){
+        Cursor cursor = resolver.query(uri, null, null, null, null);
+        cursor.moveToFirst();
+        int nameIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME);
+        if (nameIndex >= 0) {
+            return cursor.getString(nameIndex);
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * Get the value of the data column for this Uri. This is useful for
      * MediaStore Uris, and other file-based ContentProviders.
      *
@@ -322,6 +347,36 @@ public class FilePath extends CordovaPlugin {
             else if (isGoogleDriveUri(uri)) {
                 return "cloud";
             }
+        }
+        // Gmail
+        else if (isGmailUri(uri)) {
+            String filePath = null;
+            try
+            {
+                Context appContext = context.getApplicationContext();
+                ContentResolver contentResolver = context.getContentResolver();
+                String fileName = getContentName(contentResolver, uri);
+                InputStream attachment = appContext.getContentResolver().openInputStream(uri);
+                if (attachment == null)
+                    Log.e(TAG, "Cannot access mail attachment");
+                else
+                {
+                    filePath = context.getFilesDir().getPath() + "/" + fileName;
+                    FileOutputStream tmp = new FileOutputStream(filePath);
+                    byte []buffer = new byte[1024];
+                    while (attachment.read(buffer) > 0)
+                        tmp.write(buffer);
+
+                    tmp.close();
+                    attachment.close();
+                }
+            }
+            catch (FileNotFoundException e) {
+                Log.e(TAG, "File not found", e);
+            } catch (IOException e) {
+                Log.e(TAG, "Input error.", e);
+            }
+            return filePath;
         }
         // MediaStore (and general)
         else if ("content".equalsIgnoreCase(uri.getScheme())) {
