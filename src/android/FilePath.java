@@ -70,7 +70,6 @@ public class FilePath extends CordovaPlugin {
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
         this.callback = callbackContext;
         this.uriStr = args.getString(0);
-        JSONObject resultObj = new JSONObject();
 
         if (action.equals("resolveNativePath")) {
             if (PermissionHelper.hasPermission(this, READ)) {
@@ -83,6 +82,8 @@ public class FilePath extends CordovaPlugin {
             return true;
         }
         else {
+            JSONObject resultObj = new JSONObject();
+            
             resultObj.put("code", INVALID_ACTION_ERROR_CODE);
             resultObj.put("message", "Invalid action.");
 
@@ -92,7 +93,8 @@ public class FilePath extends CordovaPlugin {
         return false;
     }
     
-    public void resolveNativePath() {
+    public void resolveNativePath() throws JSONException {
+        JSONObject resultObj = new JSONObject();
         /* content:///... */
         Uri pvUrl = Uri.parse(this.uriStr);
 
@@ -106,25 +108,25 @@ public class FilePath extends CordovaPlugin {
             resultObj.put("code", GET_PATH_ERROR_CODE);
             resultObj.put("message", "Unable to resolve filesystem path.");
 
-            callbackContext.error(resultObj);
+            this.callback.error(resultObj);
         }
         else if (filePath.equals(GET_CLOUD_PATH_ERROR_ID)) {
             resultObj.put("code", GET_CLOUD_PATH_ERROR_CODE);
             resultObj.put("message", "Files from cloud cannot be resolved to filesystem, download is required.");
 
-            callbackContext.error(resultObj);
+            this.callback.error(resultObj);
         }
         else {
             Log.d(TAG, "Filepath: " + filePath);
 
-            callbackContext.success("file://" + filePath);
+            this.callback.success("file://" + filePath);
         }
     }
     
     public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException {
         for (int r:grantResults) {
             if (r == PackageManager.PERMISSION_DENIED) {
-                JSONObject result = new JSONObject();
+                JSONObject resultObj = new JSONObject();
                 resultObj.put("code", 3);
                 resultObj.put("message", "Filesystem permission was denied.");
                 
