@@ -329,12 +329,16 @@ public class FilePath extends CordovaPlugin {
             }
             // DownloadsProvider
             else if (isDownloadsDocument(uri)) {
-
                 final String id = DocumentsContract.getDocumentId(uri);
-                final Uri contentUri = ContentUris.withAppendedId(
+                try {
+                    final Uri contentUri = ContentUris.withAppendedId(
                         Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
-
-                return getDataColumn(context, contentUri, null, null);
+                    
+                    return getDataColumn(context, contentUri, null, null);                    
+                } catch(NumberFormatException e) {
+                    //In Android 8 and Android P the id is not a number
+                    return uri.getPath().replaceFirst("^/document/raw:", "").replaceFirst("^raw:", "");;
+                }
             }
             // MediaProvider
             else if (isMediaDocument(uri)) {
