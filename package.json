@@ -8,6 +8,9 @@
       "android"
     ]
   },
+  "scripts": {
+    "version": "sync-cordova-xml package.json plugin.xml --output plugin.xml && git add plugin.xml"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/hiddentao/cordova-plugin-filepath.git"
@@ -19,5 +22,8 @@
     "cordova-android"
   ],
   "author": "Ramesh Nair <ram@hiddentao.com>",
-  "license": "Apache 2.0"
+  "license": "Apache 2.0",
+  "devDependencies": {
+    "sync-cordova-xml": "^0.4.0"
+  }
 }
