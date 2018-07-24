@@ -1,6 +1,6 @@
 {
   "name": "cordova-plugin-filepath",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "Resolve native file paths from content URLs for Cordova platforms",
   "cordova": {
     "id": "cordova-plugin-filepath",
