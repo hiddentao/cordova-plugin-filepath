@@ -24,7 +24,10 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONException;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.io.File;
@@ -42,14 +45,14 @@ public class FilePath extends CordovaPlugin {
     private static final String GET_CLOUD_PATH_ERROR_ID = "cloud";
 
     private static final int RC_READ_EXTERNAL_STORAGE = 5;
-    
+
     private static CallbackContext callback;
     private static String uriStr;
-    
+
     public static final int READ_REQ_CODE = 0;
-    
+
     public static final String READ = Manifest.permission.READ_EXTERNAL_STORAGE;
-    
+
     protected void getReadPermission(int requestCode) {
         PermissionHelper.requestPermission(this, requestCode, READ);
     }
@@ -71,6 +74,19 @@ public class FilePath extends CordovaPlugin {
         this.callback = callbackContext;
         this.uriStr = args.getString(0);
 
+        if(action.equals("getArrayBufferFromContentUri")){
+            try {
+                getArrayBufferFromContentUri();
+            } catch (IOException e) {
+                JSONObject resultObj = new JSONObject();
+
+                resultObj.put("code", "0");
+                resultObj.put("message", e.getMessage());
+
+                this.callback.error(resultObj);
+            }
+            return false;
+        }
         if (action.equals("resolveNativePath")) {
             if (PermissionHelper.hasPermission(this, READ)) {
                 resolveNativePath();
@@ -83,7 +99,7 @@ public class FilePath extends CordovaPlugin {
         }
         else {
             JSONObject resultObj = new JSONObject();
-            
+
             resultObj.put("code", INVALID_ACTION_ERROR_CODE);
             resultObj.put("message", "Invalid action.");
 
@@ -92,7 +108,23 @@ public class FilePath extends CordovaPlugin {
 
         return false;
     }
-    
+
+    public void getArrayBufferFromContentUri() throws IOException {
+        Uri uri = Uri.parse(this.uriStr);
+        Context context = this.cordova.getActivity().getApplicationContext();
+        InputStream is = context.getContentResolver().openInputStream(uri);
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        int nRead;
+        byte[] data = new byte[1024];
+        while ((nRead = is.read(data, 0, data.length)) != -1) {
+            buffer.write(data, 0, nRead);
+        }
+
+        buffer.flush();
+        byte[] byteArray = buffer.toByteArray();
+        this.callback.success(byteArray);
+    }
+
     public void resolveNativePath() throws JSONException {
         JSONObject resultObj = new JSONObject();
         /* content:///... */
@@ -102,6 +134,7 @@ public class FilePath extends CordovaPlugin {
 
         Context appContext = this.cordova.getActivity().getApplicationContext();
         String filePath = getPath(appContext, pvUrl);
+
 
         //check result; send error/success callback
         if (filePath == GET_PATH_ERROR_ID) {
@@ -122,19 +155,19 @@ public class FilePath extends CordovaPlugin {
             this.callback.success("file://" + filePath);
         }
     }
-    
+
     public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException {
         for (int r:grantResults) {
             if (r == PackageManager.PERMISSION_DENIED) {
                 JSONObject resultObj = new JSONObject();
                 resultObj.put("code", 3);
                 resultObj.put("message", "Filesystem permission was denied.");
-                
+
                 this.callback.error(resultObj);
                 return;
             }
         }
-        
+
         if (requestCode == READ_REQ_CODE) {
             resolveNativePath();
         }
@@ -332,9 +365,9 @@ public class FilePath extends CordovaPlugin {
                 final String id = DocumentsContract.getDocumentId(uri);
                 try {
                     final Uri contentUri = ContentUris.withAppendedId(
-                        Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
-                    
-                    return getDataColumn(context, contentUri, null, null);                    
+                            Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
+
+                    return getDataColumn(context, contentUri, null, null);
                 } catch(NumberFormatException e) {
                     //In Android 8 and Android P the id is not a number
                     return uri.getPath().replaceFirst("^/document/raw:", "").replaceFirst("^raw:", "");
@@ -398,10 +431,10 @@ public class FilePath extends CordovaPlugin {
         Uri returnUri =uri;
         Cursor returnCursor = context.getContentResolver().query(returnUri, null, null, null, null);
         /*
-        * Get the column indexes of the data in the Cursor,
-        *     * move to the first row in the Cursor, get the data,
-        *     * and display it.
-        * */
+         * Get the column indexes of the data in the Cursor,
+         *     * move to the first row in the Cursor, get the data,
+         *     * and display it.
+         * */
         int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
         int sizeIndex = returnCursor.getColumnIndex(OpenableColumns.SIZE);
         returnCursor.moveToFirst();
