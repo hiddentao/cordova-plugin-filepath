@@ -29,6 +29,8 @@ import java.io.InputStream;
 import java.util.List;
 import java.io.File;
 
+import android.text.TextUtils;
+
 public class FilePath extends CordovaPlugin {
 
     private static final String TAG = "[FilePath plugin]: ";
