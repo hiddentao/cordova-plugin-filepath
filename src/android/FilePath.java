@@ -1,6 +1,6 @@
 package com.hiddentao.cordova.filepath;
 
-
+import android.text.TextUtils;
 import android.Manifest;
 import android.content.ContentUris;
 import android.content.Context;
