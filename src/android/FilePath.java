@@ -122,7 +122,26 @@ public class FilePath extends CordovaPlugin {
 
         buffer.flush();
         byte[] byteArray = buffer.toByteArray();
-        this.callback.success(byteArray);
+        String fileName = "";
+        String[] projection = {MediaStore.MediaColumns.DISPLAY_NAME};
+        Cursor metaCursor = context.getContentResolver().query(uri, projection, null, null, null);
+        if (metaCursor != null) {
+            try {
+                if (metaCursor.moveToFirst()) {
+                    fileName = metaCursor.getString(0);
+                }
+            } finally {
+                metaCursor.close();
+            }
+        }
+        JSONObject successObj = new JSONObject();
+        try {
+            successObj.put("filename", fileName);
+            successObj.put("content", new JSONArray(byteArray));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        this.callback.success(successObj);
     }
 
     public void resolveNativePath() throws JSONException {

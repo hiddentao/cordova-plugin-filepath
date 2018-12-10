@@ -41,15 +41,16 @@ Once installed the plugin defines the `window.FilePath` object. It offers the fo
 >* ``1`` - the native path links to a cloud file (e.g: from Google Drive app)
 
 ### getArrayBufferFromContentUri
-> Retrieves the data from the `InputStream` supplied by the `ContentProvider` of the passed URI.
-> The result is supplied inside a `Promise`, which is resolved with the `ArrayBuffer` or rejected with an error object.
+> Retrieves the filename and data from the `InputStream` supplied by the `ContentProvider` of the passed URI.
+> The result is supplied inside a `Promise`, which is resolved with the `Object` or rejected with an error object.
 >
 > Example:
 >```js
 >(async () => {
 >   try {
->        let resultBuffer = await window.FilePath.getArrayBufferFromContentUri("content://com.example.app/cache/1.pdf");
->        // Use the resulting buffer        
+>        let result = await window.FilePath.getArrayBufferFromContentUri("content://com.example.app/cache/1.pdf");
+>        // result = {filename: string, content: array<number>}        
+>        // Use the result inside your code     
 >   } catch (error){
 >        // Example error: {code: 0, message: "No content provider: null"}
 >        console.warn(error);
