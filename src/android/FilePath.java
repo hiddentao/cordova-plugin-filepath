@@ -1,6 +1,6 @@
 package com.hiddentao.cordova.filepath;
 
-
+import android.text.TextUtils;
 import android.Manifest;
 import android.content.ContentUris;
 import android.content.Context;
@@ -42,14 +42,14 @@ public class FilePath extends CordovaPlugin {
     private static final String GET_CLOUD_PATH_ERROR_ID = "cloud";
 
     private static final int RC_READ_EXTERNAL_STORAGE = 5;
-    
+
     private static CallbackContext callback;
     private static String uriStr;
-    
+
     public static final int READ_REQ_CODE = 0;
-    
+
     public static final String READ = Manifest.permission.READ_EXTERNAL_STORAGE;
-    
+
     protected void getReadPermission(int requestCode) {
         PermissionHelper.requestPermission(this, requestCode, READ);
     }
@@ -83,7 +83,7 @@ public class FilePath extends CordovaPlugin {
         }
         else {
             JSONObject resultObj = new JSONObject();
-            
+
             resultObj.put("code", INVALID_ACTION_ERROR_CODE);
             resultObj.put("message", "Invalid action.");
 
@@ -92,7 +92,7 @@ public class FilePath extends CordovaPlugin {
 
         return false;
     }
-    
+
     public void resolveNativePath() throws JSONException {
         JSONObject resultObj = new JSONObject();
         /* content:///... */
@@ -122,19 +122,19 @@ public class FilePath extends CordovaPlugin {
             this.callback.success("file://" + filePath);
         }
     }
-    
+
     public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException {
         for (int r:grantResults) {
             if (r == PackageManager.PERMISSION_DENIED) {
                 JSONObject resultObj = new JSONObject();
                 resultObj.put("code", 3);
                 resultObj.put("message", "Filesystem permission was denied.");
-                
+
                 this.callback.error(resultObj);
                 return;
             }
         }
-        
+
         if (requestCode == READ_REQ_CODE) {
             resolveNativePath();
         }
@@ -329,12 +329,28 @@ public class FilePath extends CordovaPlugin {
             }
             // DownloadsProvider
             else if (isDownloadsDocument(uri)) {
+                // thanks to https://github.com/hiddentao/cordova-plugin-filepath/issues/34#issuecomment-430129959
+                Cursor cursor = null;
+                try {
+                    cursor = context.getContentResolver().query(uri, new String[]{MediaStore.MediaColumns.DISPLAY_NAME}, null, null, null);
+                    if (cursor != null && cursor.moveToFirst()) {
+                        String fileName = cursor.getString(0);
+                        String path = Environment.getExternalStorageDirectory().toString() + "/Download/" + fileName;
+                        if (!TextUtils.isEmpty(path)) {
+                            return path;
+                        }
+                    }
+                } finally {
+                    if (cursor != null)
+                    cursor.close();
+                }
+                //
                 final String id = DocumentsContract.getDocumentId(uri);
                 try {
                     final Uri contentUri = ContentUris.withAppendedId(
                         Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
-                    
-                    return getDataColumn(context, contentUri, null, null);                    
+
+                    return getDataColumn(context, contentUri, null, null);
                 } catch(NumberFormatException e) {
                     //In Android 8 and Android P the id is not a number
                     return uri.getPath().replaceFirst("^/document/raw:", "").replaceFirst("^raw:", "");
