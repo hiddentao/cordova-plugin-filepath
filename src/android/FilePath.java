@@ -1,6 +1,6 @@
 package com.hiddentao.cordova.filepath;
 
-
+import android.text.TextUtils;
 import android.Manifest;
 import android.content.ContentUris;
 import android.content.Context;
@@ -99,7 +99,7 @@ public class FilePath extends CordovaPlugin {
         }
         else {
             JSONObject resultObj = new JSONObject();
-
+            
             resultObj.put("code", INVALID_ACTION_ERROR_CODE);
             resultObj.put("message", "Invalid action.");
 
@@ -154,7 +154,6 @@ public class FilePath extends CordovaPlugin {
         Context appContext = this.cordova.getActivity().getApplicationContext();
         String filePath = getPath(appContext, pvUrl);
 
-
         //check result; send error/success callback
         if (filePath == GET_PATH_ERROR_ID) {
             resultObj.put("code", GET_PATH_ERROR_CODE);
@@ -174,19 +173,19 @@ public class FilePath extends CordovaPlugin {
             this.callback.success("file://" + filePath);
         }
     }
-
+    
     public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException {
         for (int r:grantResults) {
             if (r == PackageManager.PERMISSION_DENIED) {
                 JSONObject resultObj = new JSONObject();
                 resultObj.put("code", 3);
                 resultObj.put("message", "Filesystem permission was denied.");
-
+                
                 this.callback.error(resultObj);
                 return;
             }
         }
-
+        
         if (requestCode == READ_REQ_CODE) {
             resolveNativePath();
         }
@@ -381,10 +380,26 @@ public class FilePath extends CordovaPlugin {
             }
             // DownloadsProvider
             else if (isDownloadsDocument(uri)) {
+                // thanks to https://github.com/hiddentao/cordova-plugin-filepath/issues/34#issuecomment-430129959
+                Cursor cursor = null;
+                try {
+                    cursor = context.getContentResolver().query(uri, new String[]{MediaStore.MediaColumns.DISPLAY_NAME}, null, null, null);
+                    if (cursor != null && cursor.moveToFirst()) {
+                        String fileName = cursor.getString(0);
+                        String path = Environment.getExternalStorageDirectory().toString() + "/Download/" + fileName;
+                        if (!TextUtils.isEmpty(path)) {
+                            return path;
+                        }
+                    }
+                } finally {
+                    if (cursor != null)
+                    cursor.close();
+                }
+                //
                 final String id = DocumentsContract.getDocumentId(uri);
                 try {
                     final Uri contentUri = ContentUris.withAppendedId(
-                            Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
+                        Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
 
                     return getDataColumn(context, contentUri, null, null);
                 } catch(NumberFormatException e) {
