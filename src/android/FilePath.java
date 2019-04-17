@@ -387,12 +387,15 @@ public class FilePath extends CordovaPlugin {
 
             // Return the remote address
             if (isGooglePhotosUri(uri)) {
-                String contentPath = getContentFromSegments(uri.getPathSegments());
-                if (contentPath != "") {
-                    return getPath(context, Uri.parse(contentPath));
-                }
-                else {
-                    return null;
+                if (uri.toString().contains("mediakey")) {
+                    return getDriveFilePath(uri, context);
+                } else {
+                    String contentPath = getContentFromSegments(uri.getPathSegments());
+                    if (contentPath != "") {
+                        return getPath(context, Uri.parse(contentPath));
+                    } else {
+                        return null;
+                    }
                 }
             }
 
