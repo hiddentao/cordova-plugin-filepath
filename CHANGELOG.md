@@ -1,3 +1,7 @@
+# 1.5.2
+
+* [Remove unneeded permission](https://github.com/hiddentao/cordova-plugin-filepath/pull/42)
+
 # 1.0.2
 
 Release notes:
