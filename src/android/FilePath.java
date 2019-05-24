@@ -107,9 +107,16 @@ public class FilePath extends CordovaPlugin {
         Log.d(TAG, "URI: " + this.uriStr);
 
         Context appContext = this.cordova.getActivity().getApplicationContext();
+        String filePath;
 
-        //String filePath = getPath(appContext, pvUrl);
-        String filePath = getFilePathFromURI(appContext, pvUrl);
+        final boolean isNougat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N;
+
+        if(isNougat) {
+            filePath = getFilePathFromURI(appContext, pvUrl);
+        } else {
+            filePath = getPath(appContext, pvUrl);
+        }
+
         //check result; send error/success callback
         if (filePath == GET_PATH_ERROR_ID) {
             resultObj.put("code", GET_PATH_ERROR_CODE);
@@ -142,7 +149,7 @@ public class FilePath extends CordovaPlugin {
             if (!folder.exists()) {
                 success = folder.mkdirs();
             }
-            
+
             if (success) {
                 File copyFile = new File(Environment.getExternalStorageDirectory().getPath() +
                         File.separator +  getApplicationName(context) + File.separator + fileName);
