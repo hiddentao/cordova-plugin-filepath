@@ -30,6 +30,7 @@
 
     <!-- android -->
     <platform name="android">
+        <framework src="commons-io:commons-io:2.4" />
         <js-module src="www/FilePath.js" name="FilePath">
             <clobbers target="window.FilePath"/>
         </js-module>
