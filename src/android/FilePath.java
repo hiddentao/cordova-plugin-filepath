@@ -190,7 +190,8 @@ public class FilePath extends CordovaPlugin {
      * @return Whether the Uri authority is Gmail.
      */
     private static boolean isGmailUri(Uri uri) {
-        return "gmail-ls".equals(uri.getAuthority());
+        return "gmail-ls".equals(uri.getAuthority()) ||
+               "com.google.android.gm.sapi".equals(uri.getAuthority());
     }
 
     /**
@@ -446,7 +447,7 @@ public class FilePath extends CordovaPlugin {
             // Return the remote address
             if (isGooglePhotosUri(uri)) {
                 String contentPath = getContentFromSegments(uri.getPathSegments());
-                if (contentPath != "") {
+                if (!"".equals(contentPath)) {
                     return getPath(context, Uri.parse(contentPath));
                 }
                 else {
