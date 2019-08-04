@@ -1,3 +1,7 @@
+# 1.5.6
+
+* [Fixes issue #50](https://github.com/hiddentao/cordova-plugin-filepath/issues/50)
+
 # 1.5.5
 
 * [Remove unneeded permission](https://github.com/hiddentao/cordova-plugin-filepath/pull/51)
