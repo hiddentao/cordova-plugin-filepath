@@ -1,3 +1,7 @@
+# 1.5.7
+
+* Fixes a bug that prevented importing documents from emulated storage
+
 # 1.5.6
 
 * [Fixes issue #50](https://github.com/hiddentao/cordova-plugin-filepath/issues/50)

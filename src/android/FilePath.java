@@ -253,7 +253,7 @@ public class FilePath extends CordovaPlugin {
     private static String getPathFromExtSD(String[] pathData) {
         final String type = pathData[0];
         final String relativePath = "/" + pathData[1];
-        String fullPath = "";
+        String fullPath;
 
         // on my Sony devices (4.4.4 & 5.1.1), `type` is a dynamic string
         // something like "71F8-2C0A", some kind of unique id per storage
@@ -265,6 +265,11 @@ public class FilePath extends CordovaPlugin {
             if (fileExists(fullPath)) {
                 return fullPath;
             }
+        }
+
+        fullPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + relativePath;
+        if (fileExists(fullPath)) {
+            return fullPath;
         }
 
         // Environment.isExternalStorageRemovable() is `true` for external and internal storage
