@@ -180,6 +180,14 @@ public class FilePath extends CordovaPlugin {
     private static boolean isGoogleDriveUri(Uri uri) {
         return "com.google.android.apps.docs.storage".equals(uri.getAuthority()) || "com.google.android.apps.docs.storage.legacy".equals(uri.getAuthority());
     }
+    
+    /**
+     * @param uri The Uri to check.
+     * @return Whether the Uri authority is One Drive.
+     */
+    private static boolean isOneDriveUri(Uri uri) {
+        return "com.microsoft.skydrive.content.external".equals(uri.getAuthority());
+    }
 
     /**
      * Get the value of the data column for this Uri. This is useful for
@@ -395,7 +403,7 @@ public class FilePath extends CordovaPlugin {
                 }
             }
 
-            if(isGoogleDriveUri(uri)){
+            if(isGoogleDriveUri(uri) || isOneDriveUri(uri)){
                 return getDriveFilePath(uri,context);
             }
 
