@@ -274,7 +274,14 @@ public class FilePath extends CordovaPlugin {
                 return fullPath;
             }
         }
-
+        
+        //fix some devices(Android Q),'type' like "71F8-2C0A"
+        //but "primary".equalsIgnoreCase(type) is false 
+        fullPath = "/storage/"+ type +"/" + relativePath;
+        if (fileExists(fullPath)) {
+            return fullPath;
+        }
+        
         // Environment.isExternalStorageRemovable() is `true` for external and internal storage
         // so we cannot relay on it.
         //
@@ -290,7 +297,7 @@ public class FilePath extends CordovaPlugin {
             return fullPath;
         }
 
-        return fullPath;
+        return "";
     }
 
     /**
