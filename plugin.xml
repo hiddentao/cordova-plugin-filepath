@@ -16,7 +16,7 @@
   under the License.
 -->
 
-<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android" id="cordova-plugin-filepath" version="1.5.7">
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android" id="cordova-plugin-filepath" version="1.5.8">
     <name>cordova-plugin-filepath</name>
     <description>Resolve native file paths from content URLs for Cordova platforms</description>
     <license>Apache 2.0</license>
