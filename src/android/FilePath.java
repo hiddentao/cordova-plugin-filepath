@@ -2,6 +2,7 @@ package com.hiddentao.cordova.filepath;
 
 import android.text.TextUtils;
 import android.Manifest;
+import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -23,7 +24,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONException;
 
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.io.File;
@@ -187,6 +190,32 @@ public class FilePath extends CordovaPlugin {
      */
     private static boolean isOneDriveUri(Uri uri) {
         return "com.microsoft.skydrive.content.external".equals(uri.getAuthority());
+    }
+
+    /**
+     * @param uri The Uri to check.
+     * @return Whether the Uri authority is Gmail.
+     */
+    private static boolean isGmailUri(Uri uri) {
+        return "gmail-ls".equals(uri.getAuthority()) ||
+               "com.google.android.gm.sapi".equals(uri.getAuthority());
+    }
+
+    /**
+     * Obtain file name from uri
+     * @param resolver ${ContentResolver}
+     * @param uri The Uri to check.
+     * @return Document name
+     */
+    private static String getContentName(ContentResolver resolver, Uri uri){
+        Cursor cursor = resolver.query(uri, null, null, null, null);
+        cursor.moveToFirst();
+        int nameIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME);
+        if (nameIndex >= 0) {
+            return cursor.getString(nameIndex);
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -389,13 +418,43 @@ public class FilePath extends CordovaPlugin {
                 return getDriveFilePath(uri,context);
             }
         }
+        // Gmail
+        else if (isGmailUri(uri)) {
+            String filePath = null;
+            try
+            {
+                Context appContext = context.getApplicationContext();
+                ContentResolver contentResolver = context.getContentResolver();
+                String fileName = getContentName(contentResolver, uri);
+                InputStream attachment = appContext.getContentResolver().openInputStream(uri);
+                if (attachment == null)
+                    Log.e(TAG, "Cannot access mail attachment");
+                else
+                {
+                    filePath = context.getFilesDir().getPath() + "/" + fileName;
+                    FileOutputStream tmp = new FileOutputStream(filePath);
+                    byte []buffer = new byte[1024];
+                    while (attachment.read(buffer) > 0)
+                        tmp.write(buffer);
+
+                    tmp.close();
+                    attachment.close();
+                }
+            }
+            catch (FileNotFoundException e) {
+                Log.e(TAG, "File not found", e);
+            } catch (IOException e) {
+                Log.e(TAG, "Input error.", e);
+            }
+            return filePath;
+        }
         // MediaStore (and general)
         else if ("content".equalsIgnoreCase(uri.getScheme())) {
 
             // Return the remote address
             if (isGooglePhotosUri(uri)) {
                 String contentPath = getContentFromSegments(uri.getPathSegments());
-                if (contentPath != "") {
+                if (!"".equals(contentPath)) {
                     return getPath(context, Uri.parse(contentPath));
                 }
                 else {
