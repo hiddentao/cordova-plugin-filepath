@@ -1,5 +1,7 @@
 # cordova-plugin-filepath
 
+**PLEASE NOTE: This plugin is no longer actively maintained.**
+
 This plugin allows you to resolve the native filesystem path for Android content
 URIs and is based on code in the [aFileChooser](https://github.com/iPaulPro/aFileChooser/blob/master/aFileChooser/src/com/ipaulpro/afilechooser/utils/FileUtils.java) library.
 
