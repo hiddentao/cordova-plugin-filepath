@@ -343,7 +343,7 @@ public class FilePath extends CordovaPlugin {
                     if (cursor != null && cursor.moveToFirst()) {
                         String fileName = cursor.getString(0);
                         String path = Environment.getExternalStorageDirectory().toString() + "/Download/" + fileName;
-                        if (!TextUtils.isEmpty(path)) {
+                        if (fileExists(path)) {
                             return path;
                         }
                     }
@@ -351,17 +351,34 @@ public class FilePath extends CordovaPlugin {
                     if (cursor != null)
                     cursor.close();
                 }
-                //
-                final String id = DocumentsContract.getDocumentId(uri);
-                try {
-                    final Uri contentUri = ContentUris.withAppendedId(
-                        Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
 
-                    return getDataColumn(context, contentUri, null, null);
-                } catch(NumberFormatException e) {
-                    //In Android 8 and Android P the id is not a number
-                    return uri.getPath().replaceFirst("^/document/raw:", "").replaceFirst("^raw:", "");
+                final String id = DocumentsContract.getDocumentId(uri);
+
+                if (id != null && id.startsWith("raw:")) {
+                    return id.substring(4);
                 }
+
+                String[] contentUriPrefixesToTry = new String[]{
+                        "content://downloads/public_downloads",
+                        "content://downloads/my_downloads"
+                };
+
+                for (String contentUriPrefix : contentUriPrefixesToTry) {
+                    Uri contentUri = ContentUris.withAppendedId(Uri.parse(contentUriPrefix), Long.valueOf(id));
+                    try {
+                        String path = getDataColumn(context, contentUri, null, null);
+                        if (path != null) {
+                            return path;
+                        }
+                    } catch (Exception e) {}
+                }
+                
+                try {
+                    return getDriveFilePath(uri,  context);    
+                } catch (Exception e) {
+                    return uri.getPath();
+                }
+
             }
             // MediaProvider
             else if (isMediaDocument(uri)) {
