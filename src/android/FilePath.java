@@ -376,6 +376,8 @@ public class FilePath extends CordovaPlugin {
                     contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
                 } else if ("audio".equals(type)) {
                     contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+                } else {
+                    contentUri = MediaStore.Files.getContentUri("external");
                 }
 
                 final String selection = "_id=?";
@@ -394,12 +396,15 @@ public class FilePath extends CordovaPlugin {
 
             // Return the remote address
             if (isGooglePhotosUri(uri)) {
-                String contentPath = getContentFromSegments(uri.getPathSegments());
-                if (contentPath != "") {
-                    return getPath(context, Uri.parse(contentPath));
-                }
-                else {
-                    return null;
+                if (uri.toString().contains("mediakey")) {
+                    return getDriveFilePath(uri, context);
+                } else {
+                    String contentPath = getContentFromSegments(uri.getPathSegments());
+                    if (contentPath != "") {
+                        return getPath(context, Uri.parse(contentPath));
+                    } else {
+                        return null;
+                    }
                 }
             }
 
