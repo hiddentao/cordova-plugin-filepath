@@ -1,3 +1,8 @@
+# 1.6.0
+
+* [#70](https://github.com/hiddentao/cordova-plugin-filepath/pull/70)
+* [#71](https://github.com/hiddentao/cordova-plugin-filepath/pull/71)
+
 # 1.5.8
 
 * Added "no longer actively maintained" message to README
