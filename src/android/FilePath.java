@@ -302,6 +302,20 @@ public class FilePath extends CordovaPlugin {
     }
 
     /**
+     * sometimes in raw type, the second part is a valid filepath
+     *
+     * @param rawPath The raw path
+     */
+    private static String getRawFilepath(String rawPath) {
+        final String[] split = rawPath.split(":");
+        if (fileExists(split[1])) {
+            return split[1];
+        }
+
+        return "";
+    }
+
+    /**
      * Get a file path from a Uri. This will get the the path for Storage Access
      * Framework Documents, as well as the _data field for the MediaStore and
      * other file-based ContentProviders.<br>
@@ -361,6 +375,13 @@ public class FilePath extends CordovaPlugin {
                 }
                 //
                 final String id = DocumentsContract.getDocumentId(uri);
+
+                // sometimes in raw type, the second part is a valid filepath
+                final String rawFilepath = getRawFilepath(id);
+                if (rawFilepath != "") {
+                    return rawFilepath;
+                }
+
                 String[] contentUriPrefixesToTry = new String[]{
                         "content://downloads/public_downloads",
                         "content://downloads/my_downloads"
