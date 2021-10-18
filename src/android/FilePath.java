@@ -324,6 +324,8 @@ public class FilePath extends CordovaPlugin {
                 ", Segments: " + uri.getPathSegments().toString()
         );
 
+        final float SDK_INT = Build.VERSION.SDK_INT;
+
         final boolean isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
 
         // DocumentProvider
