@@ -56,13 +56,14 @@ public class FilePath extends CordovaPlugin {
   }
 
   private boolean checkPermission() {
-    if (SDK_INT >= Build.VERSION_CODES.R) {
-      return Environment.isExternalStorageManager();
-    } else {
-      int result = ContextCompat.checkSelfPermission(PermissionActivity.this, READ_EXTERNAL_STORAGE);
-      int result1 = ContextCompat.checkSelfPermission(PermissionActivity.this, WRITE_EXTERNAL_STORAGE);
-      return result == PackageManager.PERMISSION_GRANTED && result1 == PackageManager.PERMISSION_GRANTED;
-    }
+    return SDK_INT;
+    // if (SDK_INT >= Build.VERSION_CODES.R) {
+    //   return Environment.isExternalStorageManager();
+    // } else {
+    //   int result = ContextCompat.checkSelfPermission(PermissionActivity.this, READ_EXTERNAL_STORAGE);
+    //   int result1 = ContextCompat.checkSelfPermission(PermissionActivity.this, WRITE_EXTERNAL_STORAGE);
+    //   return result == PackageManager.PERMISSION_GRANTED && result1 == PackageManager.PERMISSION_GRANTED;
+    // }
   }
 
   public void initialize(CordovaInterface cordova, final CordovaWebView webView) {
