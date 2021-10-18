@@ -49,9 +49,21 @@ public class FilePath extends CordovaPlugin {
 
     public static final String READ = Manifest.permission.READ_EXTERNAL_STORAGE;
 
+    private static final String SDK_INT = Build.VERSION.SDK_INT;
+
     protected void getReadPermission(int requestCode) {
         PermissionHelper.requestPermission(this, requestCode, READ);
     }
+
+    private boolean checkPermission() {
+      if (SDK_INT >= Build.VERSION_CODES.R) {
+          return Environment.isExternalStorageManager();
+      } else {
+          int result = ContextCompat.checkSelfPermission(PermissionActivity.this, READ_EXTERNAL_STORAGE);
+          int result1 = ContextCompat.checkSelfPermission(PermissionActivity.this, WRITE_EXTERNAL_STORAGE);
+          return result == PackageManager.PERMISSION_GRANTED && result1 == PackageManager.PERMISSION_GRANTED;
+      }
+  }
 
     public void initialize(CordovaInterface cordova, final CordovaWebView webView) {
         super.initialize(cordova, webView);
@@ -69,7 +81,7 @@ public class FilePath extends CordovaPlugin {
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
         this.callback = callbackContext;
         this.uriStr = args.getString(0);
-
+        return checkPermission();
         if (action.equals("resolveNativePath")) {
             if (PermissionHelper.hasPermission(this, READ)) {
                 resolveNativePath();
@@ -323,8 +335,6 @@ public class FilePath extends CordovaPlugin {
                 ", Host: " + uri.getHost() +
                 ", Segments: " + uri.getPathSegments().toString()
         );
-
-        final float SDK_INT = Build.VERSION.SDK_INT;
 
         final boolean isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
 
